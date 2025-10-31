@@ -54,12 +54,21 @@
         // Call original method first
         originalConsole[method].apply(console, args);
         
-        // Capture the log
+        // Extract stack trace
+        const stack = new Error().stack;
+        let stackTrace = '';
+        if (stack) {
+          const lines = stack.split('\n').slice(2, 12); // Skip first 2 lines (Error, this function)
+          stackTrace = lines.map(line => '  ' + line.trim()).join('\n');
+        }
+        
+        // Capture the log with stack trace
         const logEntry = {
           level: method,
           message: args.map(argToString).join(' '),
           timestamp: new Date().toISOString(),
           url: window.location.href,
+          stackTrace: stackTrace,
         };
         
         consoleLogs.push(logEntry);
