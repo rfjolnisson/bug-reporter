@@ -37,8 +37,8 @@
    * Capture existing console history if available
    */
   function captureExistingLogs() {
-    // Don't add marker logs - only capture real console activity
-    // The extension captures all logs from this point forward
+  // We still capture via content script to catch Salesforce's overridden console
+  // This is complementary to the debugger approach
   }
 
   /**
@@ -264,6 +264,7 @@
   });
 
   // Initialize console capture immediately
+  // This captures logs that Salesforce's override emits (like KAPTIO logs)
   initConsoleCapture();
   
   // Log to verify it's working (use original console to avoid capturing this)
