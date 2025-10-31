@@ -18,28 +18,50 @@ let captureComplete = {
 };
 
 /**
- * Load captured data from content script
+ * Load captured data from content script AND debugger
  */
 async function loadCapturedData() {
   return new Promise((resolve) => {
     // Get active tab
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
       if (!tabs[0]) {
         resolve({ consoleLogs: [], screenshot: null });
         return;
       }
 
-      // Request data from content script
-      chrome.tabs.sendMessage(
-        tabs[0].id,
-        { action: 'capturePage' },
-        (response) => {
-          if (chrome.runtime.lastError) {
-            console.error('Error communicating with content script:', chrome.runtime.lastError);
-            resolve({ consoleLogs: [], screenshot: null, url: tabs[0].url, title: tabs[0].title });
-          } else {
-            resolve(response || { consoleLogs: [], screenshot: null, url: tabs[0].url, title: tabs[0].title });
-          }
+      const tabId = tabs[0].id;
+
+      // First, get logs from debugger (if available)
+      chrome.runtime.sendMessage(
+        { action: 'getDebuggerLogs', tabId: tabId },
+        (debuggerResponse) => {
+          const debuggerLogs = (debuggerResponse && debuggerResponse.logs) ? debuggerResponse.logs : [];
+          
+          // Then request screenshot and additional data from content script
+          chrome.tabs.sendMessage(
+            tabId,
+            { action: 'capturePage' },
+            (response) => {
+              if (chrome.runtime.lastError) {
+                console.error('Error communicating with content script:', chrome.runtime.lastError);
+                resolve({
+                  consoleLogs: debuggerLogs,
+                  screenshot: null,
+                  url: tabs[0].url,
+                  title: tabs[0].title
+                });
+              } else {
+                // Merge debugger logs with content script logs (debugger logs are more complete)
+                const mergedLogs = debuggerLogs.length > 0 ? debuggerLogs : (response?.consoleLogs || []);
+                resolve({
+                  ...response,
+                  consoleLogs: mergedLogs,
+                  url: tabs[0].url,
+                  title: tabs[0].title
+                });
+              }
+            }
+          );
         }
       );
     });
