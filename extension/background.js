@@ -66,23 +66,48 @@ chrome.debugger.onEvent.addListener((source, method, params) => {
         .join('\n');
     }
     
+    // Format arguments - extract full detail from objects
+    const message = params.args.map(arg => {
+      // Simple value (string, number, boolean)
+      if (arg.value !== undefined) {
+        return String(arg.value);
+      }
+      
+      // Object with preview
+      if (arg.preview) {
+        let result = arg.preview.description || String(arg.type);
+        
+        // If object has properties, include them
+        if (arg.preview.properties && arg.preview.properties.length > 0) {
+          const props = arg.preview.properties.map(prop => {
+            const val = prop.value && prop.value.value !== undefined 
+              ? prop.value.value 
+              : (prop.value && prop.value.description) || '...';
+            return `${prop.name}: ${val}`;
+          }).join(', ');
+          result += ' {' + props + '}';
+        }
+        
+        return result;
+      }
+      
+      return String(arg);
+    }).join(' ');
+    
     const log = {
       level: params.type,
-      message: params.args.map(arg => {
-        if (arg.value !== undefined) {
-          return String(arg.value);
-        }
-        if (arg.preview) {
-          return arg.preview.description || String(arg);
-        }
-        return String(arg);
-      }).join(' '),
+      message: message,
       timestamp: new Date(params.timestamp).toISOString(),
       url: params.stackTrace && params.stackTrace.callFrames[0] ? params.stackTrace.callFrames[0].url : '',
       stackTrace: stackTrace, // Include full stack trace
     };
     
     consoleLogsFromDebugger[tabId].push(log);
+    
+    // Debug: log to background console to verify capture
+    if (log.message.includes('KAPTIO')) {
+      console.log('📝 Captured KAPTIO log:', log.message.substring(0, 100));
+    }
     
     // Keep only last 500 logs
     if (consoleLogsFromDebugger[tabId].length > 500) {
