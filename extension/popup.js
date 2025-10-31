@@ -2,7 +2,7 @@
  * Popup Script - Handles the extension popup UI
  */
 
-const API_URL = 'https://kaptio-api-production.up.railway.app';
+const API_URL = 'https://kaptio-bug-reporter-api-production.up.railway.app';
 
 let capturedData = {
   consoleLogs: [],

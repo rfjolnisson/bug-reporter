@@ -10,7 +10,7 @@
     "scripting"
   ],
   "host_permissions": [
-    "https://kaptio-api-production.up.railway.app/*",
+    "https://kaptio-bug-reporter-api-production.up.railway.app/*",
     "<all_urls>"
   ],
   "action": {
