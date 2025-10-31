@@ -117,7 +117,6 @@ async function submitIssue(formData) {
   const payload = {
     summary: formData.summary,
     description: fullDescription,
-    labels: formData.labels || [],
     consoleLogs: capturedData.consoleLogs || [],
     screenshotBase64: capturedData.screenshot,
   };
@@ -257,10 +256,6 @@ document.getElementById('issueForm').addEventListener('submit', (e) => {
   const formData = {
     summary: document.getElementById('summary').value,
     description: document.getElementById('description').value,
-    labels: document.getElementById('labels').value
-      .split(',')
-      .map(l => l.trim())
-      .filter(l => l),
   };
   
   submitIssue(formData);
