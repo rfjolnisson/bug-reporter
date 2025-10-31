@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kaptio Issue Reporter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🐛 Report an Issue</h1>
+      <p>Help us improve! Share what you've found and we'll take care of it. <span class="kaptio-accent">✨</span></p>
+    </div>
+
+    <div id="captureStatus" class="status-message">
+      📸 Capturing page data...
+    </div>
+
+    <form id="issueForm" class="card">
+      <div class="form-group">
+        <label for="summary">Title *</label>
+        <input type="text" id="summary" name="summary" required placeholder="Brief description of the issue">
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" placeholder="Tell us more about what happened..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="labels">Labels (comma-separated)</label>
+        <input type="text" id="labels" name="labels" placeholder="bug, frontend, etc.">
+      </div>
+
+      <button type="submit" class="btn-primary" id="submitBtn">
+        Submit to JIRA
+      </button>
+
+      <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        ✨ Creating your issue...
+      </div>
+
+      <div class="message" id="message"></div>
+    </form>
+
+    <div id="previewSection"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
+

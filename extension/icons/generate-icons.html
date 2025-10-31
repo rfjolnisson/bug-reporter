@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Generate Extension Icons</title>
+  <style>
+    body {
+      font-family: 'Lexend', sans-serif;
+      padding: 20px;
+      background: #F9FAF8;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      margin: 10px;
+      background: white;
+    }
+    .controls {
+      margin: 20px 0;
+    }
+    button {
+      background: #FFBC42;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-family: 'Lexend', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Kaptio Extension Icon Generator</h1>
+  <p>Right-click each canvas and "Save image as..." to download the icons.</p>
+  
+  <div class="controls">
+    <button onclick="generateIcons()">Generate Icons</button>
+  </div>
+  
+  <div id="canvases"></div>
+  
+  <script>
+    function drawIcon(canvas, size) {
+      const ctx = canvas.getContext('2d');
+      const center = size / 2;
+      
+      // Background circle - Kaptio teal
+      ctx.fillStyle = '#056F82';
+      ctx.beginPath();
+      ctx.arc(center, center, size * 0.47, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      const scale = size / 128;
+      
+      // Bug body - yellow
+      ctx.fillStyle = '#FFBC42';
+      ctx.beginPath();
+      ctx.ellipse(center, center, 20 * scale, 28 * scale, 0, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Bug head
+      ctx.beginPath();
+      ctx.arc(center, center - 24 * scale, 14 * scale, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Antennae
+      ctx.strokeStyle = '#FFBC42';
+      ctx.lineWidth = 3 * scale;
+      ctx.lineCap = 'round';
+      
+      ctx.beginPath();
+      ctx.moveTo(center - 8 * scale, center - 32 * scale);
+      ctx.lineTo(center - 14 * scale, center - 42 * scale);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(center + 8 * scale, center - 32 * scale);
+      ctx.lineTo(center + 14 * scale, center - 42 * scale);
+      ctx.stroke();
+      
+      // Legs - dark teal
+      ctx.strokeStyle = '#032E36';
+      
+      // Left legs
+      ctx.beginPath();
+      ctx.moveTo(center - 20 * scale, center - 8 * scale);
+      ctx.lineTo(center - 32 * scale, center - 12 * scale);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(center - 20 * scale, center);
+      ctx.lineTo(center - 34 * scale, center);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(center - 20 * scale, center + 8 * scale);
+      ctx.lineTo(center - 32 * scale, center + 12 * scale);
+      ctx.stroke();
+      
+      // Right legs
+      ctx.beginPath();
+      ctx.moveTo(center + 20 * scale, center - 8 * scale);
+      ctx.lineTo(center + 32 * scale, center - 12 * scale);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(center + 20 * scale, center);
+      ctx.lineTo(center + 34 * scale, center);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(center + 20 * scale, center + 8 * scale);
+      ctx.lineTo(center + 32 * scale, center + 12 * scale);
+      ctx.stroke();
+      
+      // Eyes
+      ctx.fillStyle = '#032E36';
+      ctx.beginPath();
+      ctx.arc(center - 5 * scale, center - 24 * scale, 2.5 * scale, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      ctx.beginPath();
+      ctx.arc(center + 5 * scale, center - 24 * scale, 2.5 * scale, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Pink accent dot
+      ctx.fillStyle = '#DE37A4';
+      ctx.beginPath();
+      ctx.arc(center + 12 * scale, center - 28 * scale, 4 * scale, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    
+    function generateIcons() {
+      const canvasesDiv = document.getElementById('canvases');
+      canvasesDiv.innerHTML = '';
+      
+      const sizes = [
+        { size: 16, name: 'icon16.png' },
+        { size: 48, name: 'icon48.png' },
+        { size: 128, name: 'icon128.png' }
+      ];
+      
+      sizes.forEach(({ size, name }) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        canvas.title = name;
+        
+        drawIcon(canvas, size);
+        
+        const container = document.createElement('div');
+        container.innerHTML = `<h3>${name} (${size}x${size})</h3>`;
+        container.appendChild(canvas);
+        
+        const downloadBtn = document.createElement('button');
+        downloadBtn.textContent = `Download ${name}`;
+        downloadBtn.onclick = () => {
+          const link = document.createElement('a');
+          link.download = name;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        };
+        container.appendChild(downloadBtn);
+        
+        canvasesDiv.appendChild(container);
+      });
+    }
+    
+    // Generate on load
+    window.addEventListener('load', generateIcons);
+  </script>
+</body>
+</html>
+

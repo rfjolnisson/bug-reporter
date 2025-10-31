@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kaptio JIRA Reporter - Setup Guide</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Lexend', sans-serif;
+      font-weight: 300;
+      background-color: #F9FAF8;
+      color: #212121;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 40px 32px;
+      background: #FFFFFF;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      font-size: 36px;
+      font-weight: 700;
+      color: #032E36;
+      margin-bottom: 12px;
+    }
+
+    .header p {
+      font-size: 18px;
+      color: #878787;
+    }
+
+    .accent {
+      color: #DE37A4;
+      font-weight: 600;
+    }
+
+    .card {
+      background: #FFFFFF;
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .step {
+      margin-bottom: 32px;
+      padding-bottom: 32px;
+      border-bottom: 2px solid #EFF5F5;
+    }
+
+    .step:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      background: #FFBC42;
+      color: #212121;
+      border-radius: 50%;
+      font-size: 20px;
+      font-weight: 700;
+      margin-right: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .step h3 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #032E36;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+    }
+
+    .step p {
+      margin-bottom: 12px;
+      color: #212121;
+      font-size: 16px;
+    }
+
+    .step ol {
+      margin: 16px 0 16px 24px;
+      font-size: 15px;
+    }
+
+    .step li {
+      margin-bottom: 10px;
+      color: #212121;
+    }
+
+    .code-inline {
+      background: #EFF5F5;
+      color: #056F82;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: 'Monaco', monospace;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .alert {
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border-left: 4px solid;
+      font-size: 15px;
+    }
+
+    .alert-success {
+      background: #EFF5F5;
+      border-left-color: #056F82;
+      color: #032E36;
+    }
+
+    .alert-info {
+      background: #FFFBF5;
+      border-left-color: #FFBC42;
+      color: #92400E;
+    }
+
+    .alert strong {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    .screenshot-box {
+      background: #EFF5F5;
+      border: 2px dashed #B4D4DA;
+      border-radius: 8px;
+      padding: 60px 24px;
+      text-align: center;
+      color: #056F82;
+      margin: 20px 0;
+      font-size: 16px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 48px;
+      padding: 32px;
+      background: linear-gradient(135deg, #056F82 0%, #034955 100%);
+      border-radius: 12px;
+      color: #FFFFFF;
+    }
+
+    .footer h2 {
+      color: #FFFFFF;
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+
+    .footer p {
+      color: #E6F1F2;
+      font-size: 16px;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-weight: 700;
+      color: #032E36;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>🐛 Kaptio JIRA Reporter</h1>
+      <p>Chrome Extension Setup for Tauck Admins</p>
+    </div>
+
+    <!-- Installation Steps -->
+    <div class="card">
+      <!-- Step 1 -->
+      <div class="step">
+        <h3><span class="step-number">1</span> Download from GitHub</h3>
+        <p>Download the extension from the GitHub repository:</p>
+        <ol>
+          <li>Go to the repository (provided by Kaptio team)</li>
+          <li>Download the <code class="code-inline">extension</code> folder or clone the entire repo</li>
+          <li>Extract to a location accessible to users</li>
+        </ol>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step">
+        <h3><span class="step-number">2</span> Open Chrome Extensions</h3>
+        <p>In Google Chrome, open the extensions page:</p>
+        <ol>
+          <li>Type <code class="code-inline">chrome://extensions/</code> in the address bar</li>
+          <li>Press Enter</li>
+        </ol>
+        <div class="screenshot-box">
+          💻 Chrome Extensions Page
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step">
+        <h3><span class="step-number">3</span> Enable Developer Mode</h3>
+        <p>Toggle the <strong>"Developer mode"</strong> switch in the top-right corner.</p>
+        <div class="screenshot-box">
+          🔧 Developer Mode Toggle (top-right)
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step">
+        <h3><span class="step-number">4</span> Load the Extension</h3>
+        <ol>
+          <li>Click the <strong>"Load unpacked"</strong> button</li>
+          <li>Navigate to the <code class="code-inline">extension</code> folder</li>
+          <li>Click <strong>"Select Folder"</strong></li>
+        </ol>
+        <div class="screenshot-box">
+          📁 Select the extension folder
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="step">
+        <h3><span class="step-number">5</span> Done!</h3>
+        <div class="alert alert-success">
+          <strong>✅ Extension Installed</strong>
+          The bug icon (🐛) should now appear in your Chrome toolbar. Click it to test!
+        </div>
+        <p><strong>Optional:</strong> Pin the extension to your toolbar:</p>
+        <ol>
+          <li>Click the puzzle piece icon 🧩 in Chrome toolbar</li>
+          <li>Find "Kaptio JIRA Reporter"</li>
+          <li>Click the pin icon 📌</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- How to Use -->
+    <div class="card">
+      <h2 style="font-size: 24px; margin-bottom: 24px; color: #032E36;">How to Use</h2>
+      
+      <div class="step">
+        <h3 style="font-size: 18px; color: #056F82; margin-bottom: 12px;">For End Users:</h3>
+        <ol>
+          <li>Visit any page (works in Salesforce!)</li>
+          <li>Click the bug icon 🐛 in Chrome toolbar</li>
+          <li>Wait 1-2 seconds for screenshot capture</li>
+          <li>Fill in the issue title and description</li>
+          <li>Click "Submit to JIRA"</li>
+          <li>Get a link to the created JIRA issue!</li>
+        </ol>
+
+        <div class="alert alert-info">
+          <strong>💡 What Gets Captured</strong>
+          The extension automatically captures ALL console logs (errors, warnings, info) and takes a screenshot of the page when you click the icon.
+        </div>
+      </div>
+    </div>
+
+    <!-- Troubleshooting -->
+    <div class="card">
+      <h2 style="font-size: 24px; margin-bottom: 24px; color: #032E36;">Quick Troubleshooting</h2>
+      
+      <div class="alert alert-info">
+        <strong>Extension not appearing?</strong>
+        Make sure you selected the <code class="code-inline">extension</code> folder (contains manifest.json). Reload the page and try again.
+      </div>
+
+      <div class="alert alert-info" style="margin-top: 16px;">
+        <strong>Can't submit to JIRA?</strong>
+        The backend server must be running. Contact the Kaptio team to verify the server is accessible at port 3519.
+      </div>
+
+      <div class="alert alert-info" style="margin-top: 16px;">
+        <strong>No console logs showing?</strong>
+        Refresh the page after installing the extension. It only captures logs from when the page loads.
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <h2>Ready to Go! <span class="accent">✨</span></h2>
+      <p>Your team can now report issues efficiently from anywhere - even Salesforce!</p>
+    </div>
+
+    <div style="text-align: center; padding: 32px 0; color: #878787; font-size: 14px;">
+      <p>Kaptio JIRA Reporter Extension • v1.0</p>
+      <p style="margin-top: 8px;">Questions? Contact the Kaptio team for support</p>
+    </div>
+  </div>
+</body>
+</html>

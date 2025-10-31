@@ -1,0 +1,33 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with Kaptio teal -->
+  <circle cx="64" cy="64" r="60" fill="#056F82"/>
+  
+  <!-- Bug icon in yellow -->
+  <g transform="translate(64, 64)">
+    <!-- Bug body -->
+    <ellipse cx="0" cy="0" rx="20" ry="28" fill="#FFBC42"/>
+    
+    <!-- Bug head -->
+    <circle cx="0" cy="-24" r="14" fill="#FFBC42"/>
+    
+    <!-- Antennae -->
+    <path d="M -8 -32 L -14 -42" stroke="#FFBC42" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 8 -32 L 14 -42" stroke="#FFBC42" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Bug legs -->
+    <path d="M -20 -8 L -32 -12" stroke="#032E36" stroke-width="3" stroke-linecap="round"/>
+    <path d="M -20 0 L -34 0" stroke="#032E36" stroke-width="3" stroke-linecap="round"/>
+    <path d="M -20 8 L -32 12" stroke="#032E36" stroke-width="3" stroke-linecap="round"/>
+    
+    <path d="M 20 -8 L 32 -12" stroke="#032E36" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 20 0 L 34 0" stroke="#032E36" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 20 8 L 32 12" stroke="#032E36" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Eyes -->
+    <circle cx="-5" cy="-24" r="2.5" fill="#032E36"/>
+    <circle cx="5" cy="-24" r="2.5" fill="#032E36"/>
+    
+    <!-- Pink accent dot -->
+    <circle cx="12" cy="-28" r="4" fill="#DE37A4"/>
+  </g>
+</svg>
