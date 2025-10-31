@@ -77,6 +77,19 @@ chrome.debugger.onEvent.addListener((source, method, params) => {
 
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'getCurrentTabId') {
+    // Return the sender's tab ID
+    if (sender.tab) {
+      sendResponse({ tabId: sender.tab.id });
+    } else {
+      // If no sender tab, get active tab
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        sendResponse({ tabId: tabs[0] ? tabs[0].id : null });
+      });
+      return true;
+    }
+  }
+  
   if (request.action === 'attachDebugger') {
     // Popup requesting to attach debugger for console capture
     const tabId = request.tabId;

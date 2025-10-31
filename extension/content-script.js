@@ -195,38 +195,57 @@
         originalConsole.log('Sample log:', consoleLogs[0]);
       }
       
-      captureScreenshot().then(screenshot => {
-        // Get Salesforce user name if available
-        const userName = getSalesforceUserName();
+      // Get current tab ID
+      chrome.runtime.sendMessage({ action: 'getCurrentTabId' }, (tabResponse) => {
+        const currentTabId = tabResponse ? tabResponse.tabId : null;
         
-        const data = {
-          consoleLogs: consoleLogs.slice(), // Copy array
-          screenshot: screenshot,
-          url: window.location.href,
-          title: document.title,
-          reportedBy: userName, // Salesforce user name or null
-        };
-        
-        originalConsole.log('✅ Sending data with', data.consoleLogs.length, 'logs, screenshot, and user:', userName);
-        
-        // Send to background for storage
-        chrome.runtime.sendMessage({
-          action: 'storeData',
-          consoleLogs: data.consoleLogs,
-          screenshot: data.screenshot,
-          reportedBy: data.reportedBy
-        });
-        
-        sendResponse(data);
-      }).catch(error => {
-        originalConsole.error('Capture error:', error);
-        sendResponse({
-          consoleLogs: consoleLogs.slice(),
-          screenshot: null,
-          url: window.location.href,
-          title: document.title,
-          reportedBy: null,
-        });
+        // First get logs from debugger (which has complete history)
+        chrome.runtime.sendMessage(
+          { action: 'getDebuggerLogs', tabId: currentTabId },
+          (debuggerResponse) => {
+          const debuggerLogs = (debuggerResponse && debuggerResponse.logs) ? debuggerResponse.logs : [];
+          
+          originalConsole.log('Debugger has', debuggerLogs.length, 'logs');
+          originalConsole.log('Content script has', consoleLogs.length, 'logs');
+          
+          // Use debugger logs if available (more complete), otherwise use content script logs
+          const allLogs = debuggerLogs.length > 0 ? debuggerLogs : consoleLogs.slice();
+          
+          captureScreenshot().then(screenshot => {
+            // Get Salesforce user name if available
+            const userName = getSalesforceUserName();
+            
+            const data = {
+              consoleLogs: allLogs, // Use debugger logs for complete history
+              screenshot: screenshot,
+              url: window.location.href,
+              title: document.title,
+              reportedBy: userName, // Salesforce user name or null
+            };
+            
+            originalConsole.log('✅ Sending data with', data.consoleLogs.length, 'logs, screenshot, and user:', userName);
+            
+            // Send to background for storage
+            chrome.runtime.sendMessage({
+              action: 'storeData',
+              consoleLogs: data.consoleLogs,
+              screenshot: data.screenshot,
+              reportedBy: data.reportedBy
+            });
+            
+            sendResponse(data);
+          }).catch(error => {
+            originalConsole.error('Capture error:', error);
+            sendResponse({
+              consoleLogs: allLogs,
+              screenshot: null,
+              url: window.location.href,
+              title: document.title,
+              reportedBy: null,
+            });
+          });
+        }
+      );
       });
       
       return true; // Will respond asynchronously
