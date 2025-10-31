@@ -106,13 +106,13 @@ async function submitIssue(formData) {
   loading.classList.add('show');
   message.className = 'message';
 
-  // Build description with "REPORTED BY" prefix if we have a user name
+  // Build description with "REPORTED BY" prefix if we have a valid user name
   let fullDescription = '';
-  if (capturedData.reportedBy) {
+  if (capturedData.reportedBy && capturedData.reportedBy !== 'View profile') {
     fullDescription = 'REPORTED BY: ' + capturedData.reportedBy + '\n\n';
   }
   fullDescription += formData.description;
-  fullDescription += '\n\nPage: ' + capturedData.url;
+  fullDescription += '\n\n---\nPage: ' + capturedData.url;
   
   const payload = {
     summary: formData.summary,

@@ -37,20 +37,8 @@
    * Capture existing console history if available
    */
   function captureExistingLogs() {
-    // Some browsers store console history - try to access it
-    // This is a best-effort approach
-    try {
-      // Check for existing console entries via performance API or window.console storage
-      // Add a marker log to verify capture is working
-      consoleLogs.push({
-        level: 'info',
-        message: '=== Kaptio Console Capture Started ===',
-        timestamp: new Date().toISOString(),
-        url: window.location.href,
-      });
-    } catch (e) {
-      // Silent fail
-    }
+    // Don't add marker logs - only capture real console activity
+    // The extension captures all logs from this point forward
   }
 
   /**
@@ -100,27 +88,41 @@
    */
   function getSalesforceUserName() {
     try {
-      // Try multiple selectors for different Salesforce layouts
-      const selectors = [
-        '.profile-card-name a.profile-link-label',
-        '.profile-card-name a',
-        '[data-aura-class="oneConsoleUserProfile"] .profile-link-label',
-        '.oneUserProfileCardTrigger',
-      ];
-      
-      for (const selector of selectors) {
-        const element = document.querySelector(selector);
-        if (element && element.textContent.trim()) {
-          return element.textContent.trim();
+      // Method 1: Try the profile card name (more specific to get only the link text)
+      const profileNameLink = document.querySelector('h1.profile-card-name > a.profile-link-label');
+      if (profileNameLink) {
+        const name = profileNameLink.textContent.trim();
+        if (name && name !== 'View profile') {
+          return name;
         }
       }
       
-      // Check if on Salesforce domain
-      if (window.location.hostname.includes('salesforce.com') || 
-          window.location.hostname.includes('force.com')) {
-        return 'Salesforce User';
+      // Method 2: Try the user profile button (get the aria-label or title)
+      const profileBtn = document.querySelector('button.oneUserProfileCardTrigger');
+      if (profileBtn) {
+        const ariaLabel = profileBtn.getAttribute('aria-label');
+        const title = profileBtn.getAttribute('title');
+        if (ariaLabel && ariaLabel !== 'View profile') {
+          return ariaLabel.replace('View profile for ', '').replace(', opens user detail dialog', '');
+        }
+        if (title && title !== 'View profile') {
+          return title;
+        }
       }
       
+      // Method 3: Try to extract from Salesforce global context (if available)
+      try {
+        if (window.$A && window.$A.get) {
+          const userName = window.$A.get('$Global.userContext.userName');
+          if (userName) {
+            return userName;
+          }
+        }
+      } catch (e) {
+        // Silent fail
+      }
+      
+      // If on Salesforce but can't find name, return null
       return null;
     } catch (e) {
       return null;
@@ -245,12 +247,9 @@
   // Initialize console capture immediately
   initConsoleCapture();
   
-  // Log to verify it's working (this should be captured)
-  originalConsole.log('✅ Kaptio JIRA Reporter content script loaded');
+  // Log to verify it's working (use original console to avoid capturing this)
+  originalConsole.log('✅ Kaptio JIRA Reporter content script loaded - Console capture is active');
   
-  // Test: add a captured log entry to verify capture is working
-  setTimeout(() => {
-    console.log('🧪 Test log - if you see this in the extension, console capture is working!');
-  }, 100);
+  // Don't add test logs - only capture real user-generated logs
 })();
 
