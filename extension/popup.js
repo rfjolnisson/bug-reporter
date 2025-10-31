@@ -17,6 +17,8 @@ let captureComplete = {
   screenshot: false
 };
 
+let currentTabId = null; // Track current tab for clearing logs
+
 /**
  * Load captured data from content script AND debugger
  */
@@ -30,6 +32,7 @@ async function loadCapturedData() {
       }
 
       const tabId = tabs[0].id;
+      currentTabId = tabId; // Store for later use
 
       // First, get logs from debugger (if available)
       chrome.runtime.sendMessage(
@@ -158,6 +161,16 @@ async function submitIssue(formData) {
       message.className = 'message success';
       message.innerHTML = `✅ Issue created! <a href="${data.issue.url}" target="_blank">View ${data.issue.key}</a>`;
       document.getElementById('issueForm').reset();
+      
+      // Clear console logs for next submission
+      if (currentTabId) {
+        chrome.runtime.sendMessage({
+          action: 'clearLogs',
+          tabId: currentTabId
+        }, () => {
+          console.log('✅ Logs cleared for next submission');
+        });
+      }
       
       // Close popup after 3 seconds
       setTimeout(() => {

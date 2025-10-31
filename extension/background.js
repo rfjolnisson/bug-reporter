@@ -51,6 +51,21 @@ chrome.debugger.onEvent.addListener((source, method, params) => {
       consoleLogsFromDebugger[tabId] = [];
     }
     
+    // Format stack trace from debugger
+    let stackTrace = '';
+    if (params.stackTrace && params.stackTrace.callFrames) {
+      stackTrace = params.stackTrace.callFrames
+        .slice(0, 10) // First 10 frames
+        .map(frame => {
+          const func = frame.functionName || '(anonymous)';
+          const file = frame.url ? frame.url.split('/').pop() : 'unknown';
+          const line = frame.lineNumber !== undefined ? frame.lineNumber : '?';
+          const col = frame.columnNumber !== undefined ? frame.columnNumber : '?';
+          return `  ${func} @ ${file}:${line}:${col}`;
+        })
+        .join('\n');
+    }
+    
     const log = {
       level: params.type,
       message: params.args.map(arg => {
@@ -64,6 +79,7 @@ chrome.debugger.onEvent.addListener((source, method, params) => {
       }).join(' '),
       timestamp: new Date(params.timestamp).toISOString(),
       url: params.stackTrace && params.stackTrace.callFrames[0] ? params.stackTrace.callFrames[0].url : '',
+      stackTrace: stackTrace, // Include full stack trace
     };
     
     consoleLogsFromDebugger[tabId].push(log);
@@ -106,6 +122,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const tabId = request.tabId;
     const logs = consoleLogsFromDebugger[tabId] || [];
     sendResponse({ logs });
+    return true;
+  }
+  
+  if (request.action === 'clearLogs') {
+    // Clear console logs for a tab after submission
+    const tabId = request.tabId;
+    if (consoleLogsFromDebugger[tabId]) {
+      console.log('🗑️ Clearing', consoleLogsFromDebugger[tabId].length, 'logs for tab', tabId);
+      consoleLogsFromDebugger[tabId] = [];
+    }
+    sendResponse({ success: true });
     return true;
   }
   
