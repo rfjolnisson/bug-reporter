@@ -167,9 +167,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (chrome.runtime.lastError) {
         console.error('Screenshot capture error:', chrome.runtime.lastError);
         sendResponse({ screenshot: null });
-      } else {
-        console.log('✅ Screenshot captured, size:', dataUrl ? dataUrl.length : 0, 'bytes');
+      } else if (dataUrl) {
+        console.log('✅ Screenshot captured, size:', dataUrl.length, 'bytes');
         sendResponse({ screenshot: dataUrl });
+      } else {
+        console.error('Screenshot capture returned null dataUrl');
+        sendResponse({ screenshot: null });
       }
     });
     return true; // Will respond asynchronously
@@ -215,13 +218,15 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   detachDebugger(tabId);
 });
 
+// DISABLED: Debugger API causes Chrome notification
+// We now rely on content script Proxy wrapper to capture all logs
 // When tab is updated (refreshed), attach debugger
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'loading' && tab.url && !tab.url.startsWith('chrome://')) {
-    // Attach debugger early to capture all console logs
-    attachDebugger(tabId);
-  }
-});
+// chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+//   if (changeInfo.status === 'loading' && tab.url && !tab.url.startsWith('chrome://')) {
+//     // Attach debugger early to capture all console logs
+//     attachDebugger(tabId);
+//   }
+// });
 
 console.log('🚀 Kaptio JIRA Reporter background worker loaded');
 

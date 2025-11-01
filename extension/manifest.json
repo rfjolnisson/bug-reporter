@@ -1,14 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Kaptio JIRA Reporter",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Capture console logs and screenshots to report issues to JIRA with Kaptio branding",
   "permissions": [
     "activeTab",
     "storage",
     "tabs",
-    "scripting",
-    "debugger"
+    "scripting"
   ],
   "host_permissions": [
     "https://kaptio-bug-reporter-api-production.up.railway.app/*",

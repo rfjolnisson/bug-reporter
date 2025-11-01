@@ -44,7 +44,7 @@
    * This uses apply() pattern to ensure we catch calls even through framework wrappers
    */
   function createConsoleWrapper(methodName, nativeMethod) {
-    return function(...args) {
+    const wrapper = function(...args) {
       // Extract stack trace
       const stack = new Error().stack;
       let stackTrace = '';
@@ -74,22 +74,77 @@
       try {
         if (nativeMethod && typeof nativeMethod === 'function') {
           nativeMethod.apply(console, args);
+        } else if (nativeConsole[methodName] && typeof nativeConsole[methodName] === 'function') {
+          // Fallback to stored native method
+          nativeConsole[methodName].apply(console, args);
         } else if (console[methodName] && typeof console[methodName] === 'function') {
-          // Fallback to current console method if native is not available
+          // Last resort: use current console method
           console[methodName].apply(console, args);
         }
       } catch (e) {
         // Silently fail if console method call fails
       }
     };
+    
+    // Mark wrapper so we can detect if it's been replaced
+    wrapper._kaptioWrapper = true;
+    wrapper._kaptioMethod = methodName;
+    
+    return wrapper;
   }
 
   /**
    * Override console methods using Object.defineProperty for persistence
    * Option 2: console.log.apply wrapper pattern with periodic re-application
+   * Now with Proxy-based interception for maximum coverage
    */
   function initConsoleCapture() {
     const methods = ['log', 'warn', 'error', 'info', 'debug'];
+    
+    // Try to create a Proxy for the console object to catch ALL calls
+    let consoleProxy = null;
+    try {
+      // Get the current console descriptor
+      const consoleDescriptor = Object.getOwnPropertyDescriptor(window, 'console') || 
+                                 Object.getOwnPropertyDescriptor(Object.getPrototypeOf(window), 'console');
+      
+      if (consoleDescriptor && consoleDescriptor.configurable) {
+        const originalConsole = window.console;
+        consoleProxy = new Proxy(originalConsole, {
+          get: function(target, prop) {
+            // If it's a method we want to intercept
+            if (methods.includes(prop) && typeof target[prop] === 'function') {
+              // Check if we already wrapped it
+              if (target[prop]._kaptioWrapper) {
+                return target[prop];
+              }
+              
+              // Create and return wrapper
+              const wrapper = createConsoleWrapper(prop, target[prop]);
+              // Store wrapper back on original
+              try {
+                target[prop] = wrapper;
+              } catch (e) {
+                // If we can't set it, just return wrapper for this call
+              }
+              return wrapper;
+            }
+            return target[prop];
+          }
+        });
+        
+        // Replace window.console with our proxy
+        Object.defineProperty(window, 'console', {
+          value: consoleProxy,
+          writable: true,
+          configurable: true,
+          enumerable: true
+        });
+      }
+    } catch (e) {
+      // Proxy approach failed, fall back to method wrapping
+      consoleProxy = null;
+    }
     
     function applyOverrides() {
       methods.forEach((method) => {
@@ -97,20 +152,37 @@
           // Get current console method (might be Salesforce's override)
           const currentMethod = console[method];
           
+          // Skip if it's already our wrapper
+          if (currentMethod && currentMethod._kaptioWrapper && currentMethod._kaptioMethod === method) {
+            return;
+          }
+          
           // Create wrapper that intercepts calls
+          // Use the current method (which might be Salesforce's wrapper) as the native method
           const wrapper = createConsoleWrapper(method, currentMethod || nativeConsole[method]);
           
           // Use Object.defineProperty to make it persistent
           // configurable: true allows it to be replaced, but we'll re-apply
-          Object.defineProperty(console, method, {
-            value: wrapper,
-            writable: true,
-            configurable: true,
-            enumerable: true
-          });
+          try {
+            Object.defineProperty(console, method, {
+              value: wrapper,
+              writable: true,
+              configurable: true,
+              enumerable: true
+            });
+          } catch (e) {
+            // If defineProperty fails, try direct assignment
+            console[method] = wrapper;
+          }
         } catch (e) {
-          // If defineProperty fails, try direct assignment
-          console[method] = createConsoleWrapper(method, console[method] || nativeConsole[method]);
+          // If everything fails, try direct assignment
+          try {
+            if (!console[method] || !console[method]._kaptioWrapper) {
+              console[method] = createConsoleWrapper(method, console[method] || nativeConsole[method]);
+            }
+          } catch (e2) {
+            // Last resort failed
+          }
         }
       });
       
@@ -159,29 +231,28 @@
     applyOverrides();
     
     // Re-apply overrides periodically to catch Salesforce's late initialization
-    // Check every 500ms for the first 10 seconds, then every 2 seconds
+    // Check every 200ms for the first 30 seconds, then every 1 second
     let checkCount = 0;
     const reapplyInterval = setInterval(() => {
       checkCount++;
       
-      // Check if our override is still in place
-      const needsReapply = methods.some(method => {
-        const current = console[method];
-        // If the method doesn't have our wrapper signature, it might have been replaced
-        // We can't perfectly detect this, so we'll just re-apply periodically
-        return false; // We'll re-apply anyway for safety
-      });
-      
-      // Re-apply overrides (every time for first 10 seconds, then less frequently)
-      if (checkCount <= 20 || checkCount % 4 === 0) {
+      // Re-apply overrides more aggressively (every time for first 30 seconds, then every 5 checks)
+      if (checkCount <= 150 || checkCount % 5 === 0) {
         applyOverrides();
+        
+        // Debug: log how many logs we've captured so far
+        if (checkCount % 50 === 0) {
+          try {
+            nativeConsole.log(`[Kaptio] Re-applied overrides. Captured ${consoleLogs.length} logs so far.`);
+          } catch (e) {}
+        }
       }
       
-      // Stop after 5 minutes (safety limit)
-      if (checkCount > 600) {
+      // Stop after 10 minutes (safety limit)
+      if (checkCount > 3000) {
         clearInterval(reapplyInterval);
       }
-    }, 500);
+    }, 200);
     
     // Also re-apply on DOM mutations (Salesforce loads dynamically)
     if (typeof MutationObserver !== 'undefined') {
@@ -194,10 +265,10 @@
         subtree: true
       });
       
-      // Stop observing after 30 seconds (by then Salesforce should have loaded)
+      // Stop observing after 60 seconds (give Salesforce more time to load)
       setTimeout(() => {
         observer.disconnect();
-      }, 30000);
+      }, 60000);
     }
   }
 
@@ -353,72 +424,58 @@
         nativeConsole.log('Current console logs count:', consoleLogs.length);
       } catch (e) {}
       
-      // Get current tab ID
-      chrome.runtime.sendMessage({ action: 'getCurrentTabId' }, (tabResponse) => {
-        const currentTabId = tabResponse ? tabResponse.tabId : null;
+      // Use content script logs only (no debugger API to avoid Chrome notification)
+      try {
+        nativeConsole.log('Content script has', consoleLogs.length, 'logs');
         
-        // First get logs from debugger (which has complete history from page start)
-        chrome.runtime.sendMessage(
-          { action: 'getDebuggerLogs', tabId: currentTabId },
-          (debuggerResponse) => {
-          const debuggerLogs = (debuggerResponse && debuggerResponse.logs) ? debuggerResponse.logs : [];
+        // Count KAPTIO logs
+        const contentKaptioCount = consoleLogs.filter(l => l.message && l.message.includes('KAPTIO')).length;
+        nativeConsole.log('KAPTIO logs - Content:', contentKaptioCount);
+      } catch (e) {}
+      
+      // Use content script logs only
+      const allLogs = consoleLogs.slice();
           
-          try {
-            nativeConsole.log('Debugger has', debuggerLogs.length, 'logs');
-            nativeConsole.log('Content script has', consoleLogs.length, 'logs');
-            
-            // Count KAPTIO logs in each source
-            const debuggerKaptioCount = debuggerLogs.filter(l => l.message && l.message.includes('KAPTIO')).length;
-            const contentKaptioCount = consoleLogs.filter(l => l.message && l.message.includes('KAPTIO')).length;
-            nativeConsole.log('KAPTIO logs - Debugger:', debuggerKaptioCount, 'Content:', contentKaptioCount);
-          } catch (e) {}
-          
-          // Merge both sources intelligently
-          const allLogs = mergeLogs(debuggerLogs, consoleLogs.slice());
-          
-          try {
-            nativeConsole.log('✅ Merged logs:', allLogs.length, 'total');
-          } catch (e) {}
-          
-          captureScreenshot().then(screenshot => {
-            // Get Salesforce user name if available
-            const userName = getSalesforceUserName();
-            
-            const data = {
-              consoleLogs: allLogs, // Merged logs from both sources
-              screenshot: screenshot,
-              url: window.location.href,
-              title: document.title,
-              reportedBy: userName, // Salesforce user name or null
-            };
-            
-            try {
-              nativeConsole.log('✅ Sending data with', data.consoleLogs.length, 'logs, screenshot, and user:', userName);
-            } catch (e) {}
-            
-            // Send to background for storage
-            chrome.runtime.sendMessage({
-              action: 'storeData',
-              consoleLogs: data.consoleLogs,
-              screenshot: data.screenshot,
-              reportedBy: data.reportedBy
-            });
-            
-            sendResponse(data);
-          }).catch(error => {
-            try {
-              nativeConsole.error('Capture error:', error);
-            } catch (e) {}
-            sendResponse({
-              consoleLogs: allLogs,
-              screenshot: null,
-              url: window.location.href,
-              title: document.title,
-              reportedBy: null,
-            });
-          });
-        }
-      );
+      try {
+        nativeConsole.log('✅ Total logs:', allLogs.length);
+      } catch (e) {}
+      
+      captureScreenshot().then(screenshot => {
+        // Get Salesforce user name if available
+        const userName = getSalesforceUserName();
+        
+        const data = {
+          consoleLogs: allLogs, // Content script logs only
+          screenshot: screenshot,
+          url: window.location.href,
+          title: document.title,
+          reportedBy: userName, // Salesforce user name or null
+        };
+        
+        try {
+          nativeConsole.log('✅ Sending data with', data.consoleLogs.length, 'logs, screenshot, and user:', userName);
+        } catch (e) {}
+        
+        // Send to background for storage
+        chrome.runtime.sendMessage({
+          action: 'storeData',
+          consoleLogs: data.consoleLogs,
+          screenshot: data.screenshot,
+          reportedBy: data.reportedBy
+        });
+        
+        sendResponse(data);
+      }).catch(error => {
+        try {
+          nativeConsole.error('Capture error:', error);
+        } catch (e) {}
+        sendResponse({
+          consoleLogs: allLogs,
+          screenshot: null,
+          url: window.location.href,
+          title: document.title,
+          reportedBy: null,
+        });
       });
       
       return true; // Will respond asynchronously
@@ -445,7 +502,16 @@
   
   // Log to verify it's working (use native console to avoid capturing this)
   try {
-    nativeConsole.log('✅ Kaptio JIRA Reporter content script loaded - Console capture is active (Option 2: Persistent wrapper)');
+    nativeConsole.log('✅ Kaptio JIRA Reporter content script loaded - Console capture is active (Option 2: Proxy + Persistent wrapper)');
+    
+    // Test our wrapper is working by logging through our wrapper
+    setTimeout(() => {
+      try {
+        console.log('[Kaptio Test] If you see this in the extension logs, wrapper is working!');
+      } catch (e) {
+        nativeConsole.log('[Kaptio] Wrapper test failed:', e);
+      }
+    }, 100);
   } catch (e) {
     // Fallback if native console not available
   }

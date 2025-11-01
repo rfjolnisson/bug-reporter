@@ -34,37 +34,27 @@ async function loadCapturedData() {
       const tabId = tabs[0].id;
       currentTabId = tabId; // Store for later use
 
-      // First, get logs from debugger (if available)
-      chrome.runtime.sendMessage(
-        { action: 'getDebuggerLogs', tabId: tabId },
-        (debuggerResponse) => {
-          const debuggerLogs = (debuggerResponse && debuggerResponse.logs) ? debuggerResponse.logs : [];
-          
-          // Then request screenshot and additional data from content script
-          chrome.tabs.sendMessage(
-            tabId,
-            { action: 'capturePage' },
-            (response) => {
-              if (chrome.runtime.lastError) {
-                console.error('Error communicating with content script:', chrome.runtime.lastError);
-                resolve({
-                  consoleLogs: debuggerLogs,
-                  screenshot: null,
-                  url: tabs[0].url,
-                  title: tabs[0].title
-                });
-              } else {
-                // Merge debugger logs with content script logs (debugger logs are more complete)
-                const mergedLogs = debuggerLogs.length > 0 ? debuggerLogs : (response?.consoleLogs || []);
-                resolve({
-                  ...response,
-                  consoleLogs: mergedLogs,
-                  url: tabs[0].url,
-                  title: tabs[0].title
-                });
-              }
-            }
-          );
+      // Use content script only (no debugger API to avoid Chrome notification)
+      chrome.tabs.sendMessage(
+        tabId,
+        { action: 'capturePage' },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.error('Error communicating with content script:', chrome.runtime.lastError);
+            resolve({
+              consoleLogs: [],
+              screenshot: null,
+              url: tabs[0].url,
+              title: tabs[0].title
+            });
+          } else {
+            resolve({
+              ...response,
+              consoleLogs: response?.consoleLogs || [],
+              url: tabs[0].url,
+              title: tabs[0].title
+            });
+          }
         }
       );
     });
